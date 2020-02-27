@@ -28,7 +28,7 @@ class MenuFragment : Fragment() {
         }
         preferencesHelper = PreferencesHelper(activity as MainActivity)
         topScore = preferencesHelper.getTopScore()
-        if (topScore < lastScore){
+        if (topScore < lastScore) {
             preferencesHelper.saveTopScore(lastScore)
             topScore = lastScore
         }
@@ -40,19 +40,10 @@ class MenuFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_menu, container, false)
 
-        view.findViewById<Button>(R.id.btn_continue).apply {
-            if (isFromPause) this.visibility = View.VISIBLE
-            setOnClickListener {
-                getNavigation()?.let {
-                    GameFragment.open(it, isNewGame = false)
-                }
-            }
-        }
-
         view.findViewById<Button>(R.id.btn_new_game).apply {
             setOnClickListener {
                 getNavigation()?.let {
-                    GameFragment.open(it, isNewGame = true)
+                    GameFragment.open(it)
                 }
             }
         }

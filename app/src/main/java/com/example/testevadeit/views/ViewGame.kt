@@ -18,37 +18,23 @@ import java.util.*
 
 class ViewGame(context: Context, attrs: AttributeSet) : View(context, attrs) {
 
+    lateinit var traps: Traps
+    lateinit var foods: Foods
+    lateinit var player: Player
+
+    var onGameStartCallback: ((gameFieldSize: ObjectSize) -> Unit)? = null
     var onGameOverCallback: ((scores: Int) -> Unit)? = null
     var onPointsChangeCallback: ((scores: Int) -> Unit)? = null
-    var trapsPerScreen = 10
 
-    private lateinit var traps: Traps
-    private lateinit var foods: Foods
-    private lateinit var player: Player
-    private lateinit var gameFieldSize: ObjectSize
     private val backgroundColor = ResourcesCompat.getColor(resources, R.color.black, null)
-    private val playerColor = ResourcesCompat.getColor(resources, R.color.green, null)
-    private val trapColor = ResourcesCompat.getColor(resources, R.color.red, null)
-    private val eatableColor = ResourcesCompat.getColor(resources, R.color.yellow, null)
+
     private val touchEventHelper = TouchEventHelper()
     private var points = 0
-    private var trapsGap = 0f // vertical space between traps
-    private var foodsGap = 0f // vertical space between foods
-    private val foodPerScreen: Int
-        get() = trapsPerScreen + 5
 
     // on start game
     override fun onSizeChanged(width: Int, height: Int, oldWidth: Int, oldHeight: Int) {
         super.onSizeChanged(width, height, oldWidth, oldHeight)
-        gameFieldSize = ObjectSize(width.toFloat(), height.toFloat())
-        trapsGap = gameFieldSize.height / trapsPerScreen
-        foodsGap = gameFieldSize.height / foodPerScreen
-        val playerX = gameFieldSize.width / 2f
-        val playerY = gameFieldSize.height * 0.9f
-
-        player = Player(Coordinates(playerX, playerY), gameFieldSize, playerColor)
-        traps = Traps(trapColor, gameFieldSize, trapsPerScreen)
-        foods = Foods(eatableColor, gameFieldSize, foodPerScreen)
+        onGameStartCallback?.invoke(ObjectSize(width.toFloat(), height.toFloat()))
     }
 
     // on time tick

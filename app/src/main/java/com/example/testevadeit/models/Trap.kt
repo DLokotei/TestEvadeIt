@@ -10,7 +10,7 @@ class Trap(
 ) : GameObject {
 
     companion object {
-        val SIZE = ObjectSize(10f, 2f)
+        val SIZE = ObjectSize(20f, 4f)
     }
 
     private val trait = ReflectableTrait(position, SIZE, gameFieldSize)

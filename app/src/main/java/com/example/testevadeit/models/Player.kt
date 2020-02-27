@@ -16,7 +16,7 @@ class Player(
 ) : Collidable, AsRectangle, Controlable {
 
     companion object {
-        val SIZE = ObjectSize(40f, 10f)
+        val SIZE = ObjectSize(90f, 10f)
     }
 
     private val playerPaint = Paint().apply {
