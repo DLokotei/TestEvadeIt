@@ -11,8 +11,12 @@ import android.view.MotionEvent
 import android.view.View
 import androidx.core.content.res.ResourcesCompat
 import com.example.testevadeit.R
-import com.example.testevadeit.extensions.collided
+import com.example.testevadeit.extensions.collidedWith
 import com.example.testevadeit.logic.TouchEventHelper
+import com.example.testevadeit.models.Coordinates
+import com.example.testevadeit.models.Food
+import com.example.testevadeit.models.ObjectSize
+import com.example.testevadeit.models.Trap
 import java.util.*
 
 
@@ -21,24 +25,18 @@ class ViewGame(context: Context, attrs: AttributeSet) : View(context, attrs) {
     var onPlayerMoveCallback: ((newPosition: Float) -> Unit)? = null
     var onGameOverCallback: ((scores: Int) -> Unit)? = null
     var onPointsChangeCallback: ((scores: Int) -> Unit)? = null
-    var trapsPerScreen = 5
-        set(value) {
-            field = value
-            trapsData = getInitialTrapData(value)
-            eatablesData = getInitialEatablesData()
-        }
-    private val eatablesPerScreen: Int
+    var trapsPerScreen = 10
+    private val foodPerScreen: Int
         get() = trapsPerScreen + 5
     private var trapsGap = 100f // vertical space between traps
-    private var eatablesGap = 30f // vertical space between traps
+    private var foodsGap = 30f // vertical space between foods
     private var objectWidth = 0f
 
-    private lateinit var trapsData: Array<Fallable>
-    private lateinit var eatablesData: Array<Fallable>
+    private var traps: Array<Trap>? = null
+    private var foods: Array<Food>? = null
 
     private var points = 0
-    private var localWidth = 0
-    private var localHeight = 0f
+    var gameFieldSize: ObjectSize = ObjectSize(0f, 0f)
     private var playerPosition = 0f
     private var playerYPosition = 0f
     private val backgroundColor = ResourcesCompat.getColor(resources, R.color.black, null)
@@ -61,42 +59,42 @@ class ViewGame(context: Context, attrs: AttributeSet) : View(context, attrs) {
         style = Paint.Style.STROKE
         strokeWidth = STROKE_WIDTH
     }
-    private val eatablePaint = Paint().apply {
+    private val foodPaint = Paint().apply {
         color = eatableColor
     }
 
     // on start game
     override fun onSizeChanged(width: Int, height: Int, oldWidth: Int, oldHeight: Int) {
         super.onSizeChanged(width, height, oldWidth, oldHeight)
-        localWidth = width
-        localHeight = height.toFloat()
-        trapsGap = localHeight / trapsPerScreen
-        eatablesGap = localHeight / eatablesPerScreen
-        playerYPosition = localHeight * 0.9f // player always on bottom
-        playerPosition = localWidth / 2f // player started on middle
-        objectWidth = localWidth * 0.1f // player is 10% of screen
+        gameFieldSize = ObjectSize(width.toFloat(), height.toFloat())
+        trapsGap = gameFieldSize.height / trapsPerScreen
+        foodsGap = gameFieldSize.height / foodPerScreen
+        playerYPosition = gameFieldSize.height * 0.9f // player always on bottom
+        playerPosition = gameFieldSize.width / 2f // player started on middle
+        objectWidth = gameFieldSize.width * 0.1f // player is 10% of screen
 
-        trapsData = getInitialTrapData(trapsPerScreen)
-        eatablesData = getInitialEatablesData()
+        traps = getInitialTrapData(trapsPerScreen)
+        foods = getInitialFoodsData(foodPerScreen)
     }
 
-    private fun getInitialTrapData(trapsPerScreen: Int): Array<Fallable> = Array(trapsPerScreen) {
-        Fallable(
-            Coordinates(kotlin.random.Random.nextFloat(), -trapsGap * it),
-            objectWidth.toInt(),
-            2
-        ) { onGameOverCallback?.invoke(points) }
+    private fun getInitialTrapData(trapsPerScreen: Int): Array<Trap> = Array(trapsPerScreen) {
+        Trap(
+            Coordinates(
+                Trap.SIZE.width / 2 + Random().nextInt((gameFieldSize.width - Trap.SIZE.width).toInt()).toFloat(),
+                -trapsGap * it
+            ),
+            gameFieldSize
+        )
     }
 
-    private fun getInitialEatablesData(): Array<Fallable> = Array(eatablesPerScreen) { index ->
-        Fallable(
-            Coordinates(kotlin.random.Random.nextFloat(), -eatablesGap * index),
-            objectWidth.toInt() / 2,
-            objectWidth.toInt() / 2
-        ) {
-            increasePoints()
-            eatablesData[index].recycleToTop()
-        }
+    private fun getInitialFoodsData(itemsPrerScreen: Int): Array<Food> = Array(itemsPrerScreen) {
+        Food(
+            Coordinates(
+                Food.SIZE.width / 2 + Random().nextInt((gameFieldSize.width - Food.SIZE.width).toInt()).toFloat(),
+                -foodsGap * it
+            ),
+            gameFieldSize
+        )
     }
 
     override fun onDraw(canvas: Canvas?) {
@@ -105,8 +103,8 @@ class ViewGame(context: Context, attrs: AttributeSet) : View(context, attrs) {
         canvas.drawColor(backgroundColor)
 
         drawPlayer(canvas)
+        drawFoods(canvas)
         drawTraps(canvas)
-        drawEatables(canvas)
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -118,7 +116,7 @@ class ViewGame(context: Context, attrs: AttributeSet) : View(context, attrs) {
     private fun onSlide(distance: Float) {
         val newPlayerPosition = playerPosition + distance
         Log.d("tagtag", "newPlayerPosition = $newPlayerPosition")
-        if (newPlayerPosition - objectWidth < 0 || newPlayerPosition + objectWidth > localWidth) return
+        if (newPlayerPosition - objectWidth < 0 || newPlayerPosition + objectWidth > gameFieldSize.width) return
         playerPosition = newPlayerPosition
         onPlayerMoveCallback?.invoke(playerPosition)
         invalidate()
@@ -137,14 +135,23 @@ class ViewGame(context: Context, attrs: AttributeSet) : View(context, attrs) {
     }
 
     private fun drawTraps(canvas: Canvas) {
-        trapsData.forEach { obj ->
-            canvas.drawRect(obj.getRect(), trapPaint)
+        traps?.forEach { trap ->
+            val rect = trap.getRectangle()
+            if (rect.collidedWith(playerRect)) {
+                onGameOverCallback?.invoke(points)
+            }
+            canvas.drawRect(rect, trapPaint)
         }
     }
 
-    private fun drawEatables(canvas: Canvas) {
-        eatablesData.forEach { obj ->
-            canvas.drawRect(obj.getRect(), eatablePaint)
+    private fun drawFoods(canvas: Canvas) {
+        foods?.forEach { food ->
+            val rect = food.getRectangle()
+            if (rect.collidedWith(playerRect)) {
+                increasePoints()
+                food.onCollideWithPlayer()
+            }
+            canvas.drawRect(rect, foodPaint)
         }
     }
 
@@ -154,40 +161,13 @@ class ViewGame(context: Context, attrs: AttributeSet) : View(context, attrs) {
     }
 
     fun nextFrame() {
+        traps?.forEach {
+            it.move()
+        }
+        foods?.forEach {
+            it.move()
+        }
         invalidate()
-    }
-
-    data class Coordinates(var x: Float, var y: Float)
-    inner class Fallable(
-        var position: Coordinates,
-        private val itemWidth: Int,
-        private val itemHeight: Int,
-        var onPlayerCollideCallback: (() -> Unit)? = null
-    ) {
-        fun getRect(): Rect {
-            position.y = position.y + 1
-            val rect = Rect().apply {
-                left = (position.x * localWidth - itemWidth / 2).toInt()
-                top = (position.y - itemHeight / 2).toInt()
-                right = (position.x * localWidth + itemWidth / 2).toInt()
-                bottom = (position.y + itemHeight / 2).toInt()
-            }
-            if (position.y < 0) return rect
-            if (position.y >= localHeight - 10) {
-                recycleToTop()
-            }
-            if (rect.collided(playerRect)) {
-                // game over
-                onPlayerCollideCallback?.invoke()
-            }
-            return rect
-        }
-
-        fun recycleToTop() {
-            position.y = 0f
-            // get new random horizontal position
-            position.x = Random().nextFloat()
-        }
     }
 
 }

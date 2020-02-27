@@ -7,7 +7,7 @@ import com.example.testevadeit.MainActivity
 
 fun Fragment.getNavigation(): NavController = (activity as MainActivity).navigation
 
-fun Rect.collided(target: Rect): Boolean {
+fun Rect.collidedWith(target: Rect): Boolean {
     if (target.right < this.left || target.left > this.right) {
         return false
     }
