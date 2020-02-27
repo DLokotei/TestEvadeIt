@@ -36,7 +36,7 @@ class GameFragment : Fragment() {
     private var playerColor: Int = 0
     private var trapColor: Int = 0
     private var eatableColor: Int = 0
-    private val gameTime = object : PeriodicalTask(20L) {
+    private val gameTime = object : PeriodicalTask(10L) {
         override fun doTask() {
             gameView.nextFrame()
         }
@@ -71,7 +71,7 @@ class GameFragment : Fragment() {
                 btnPause.setImageDrawable(imgContinue)
             } else {
                 gameTime.resume()
-                btnPause.setImageDrawable(imgContinue)
+                btnPause.setImageDrawable(imgPause)
             }
             isGameRunning = !isGameRunning
         }
