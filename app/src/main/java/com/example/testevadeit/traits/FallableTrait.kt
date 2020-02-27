@@ -9,7 +9,7 @@ class FallableTrait(position: Coordinates, objectSize: ObjectSize, gameFieldSize
     init {
         // set moving directions
         movingVector.x = 0f
-        movingVector.y = 1f
+        movingVector.y = 2f
     }
 
 

@@ -19,7 +19,7 @@ class GameFragment : Fragment() {
     private lateinit var btnPause: ImageView
     private lateinit var pointsText: TextView
 
-    val gameTime = object : PeriodicalTask(20L) {
+    private val gameTime = object : PeriodicalTask(20L) {
         override fun doTask() {
             gameView.nextFrame()
         }
@@ -42,13 +42,17 @@ class GameFragment : Fragment() {
         pointsText = view.findViewById(R.id.text_points)
         btnPause.setOnClickListener {
             gameTime.pause()
-            MenuFragment.open(getNavigation(), isFromPause = true)
+            getNavigation()?.let {
+                MenuFragment.open(it, isFromPause = true)
+            }
         }
         gameView.onGameOverCallback = { score ->
-            MenuFragment.open(getNavigation(), isFromPause = false, lastScore = score)
+            getNavigation()?.let {
+                MenuFragment.open(it, isFromPause = false, lastScore = score)
+            }
         }
         gameView.onPointsChangeCallback = { points ->
-            pointsText.text = resources.getString(R.string.scores, points.toString())
+            pointsText.text = resources.getString(R.string.last_scores, points.toString())
         }
         if (isNewGame) {
             gameView.trapsPerScreen = 20

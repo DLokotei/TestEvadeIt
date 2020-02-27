@@ -1,16 +1,15 @@
 package com.example.testevadeit.models
 
 import android.graphics.Rect
-import com.example.testevadeit.traits.AsRectangle
-import com.example.testevadeit.traits.Movable
+import com.example.testevadeit.traits.Collidable
 import com.example.testevadeit.traits.ReflectableTrait
 
 class Trap(
     position: Coordinates,
     gameFieldSize: ObjectSize
-) : Movable, AsRectangle {
+) : GameObject {
 
-    companion object{
+    companion object {
         val SIZE = ObjectSize(10f, 2f)
     }
 
@@ -24,5 +23,11 @@ class Trap(
         top = (trait.position.y - SIZE.height / 2).toInt()
         bottom = (trait.position.y + SIZE.height / 2).toInt()
     }
+
+    override fun checkCollideWith(subject: Collidable, onCollideCallback: (() -> Unit)?) {
+        //pass
+    }
+
+    override fun getRects(): List<Rect> = listOf(getRectangle())
 
 }

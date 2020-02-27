@@ -1,15 +1,14 @@
 package com.example.testevadeit.models
 
 import android.graphics.Rect
-import com.example.testevadeit.traits.AsRectangle
-import com.example.testevadeit.traits.CollidableWithPlayer
+import com.example.testevadeit.extensions.collidedWith
+import com.example.testevadeit.traits.Collidable
 import com.example.testevadeit.traits.FallableTrait
-import com.example.testevadeit.traits.Movable
 
 class Food(
     position: Coordinates,
     gameFieldSize: ObjectSize
-) : Movable, AsRectangle, CollidableWithPlayer {
+) : GameObject {
 
     companion object {
         val SIZE = ObjectSize(5f, 5f)
@@ -26,8 +25,15 @@ class Food(
         bottom = (trait.position.y + SIZE.height / 2).toInt()
     }
 
-    override fun onCollideWithPlayer() {
-        trait.recycleToTop()
+    override fun checkCollideWith(subject: Collidable, onCollideCallback: (() -> Unit)?) {
+        if (subject is Player) {
+            if (subject.getRectangle().collidedWith(getRectangle())) {
+                trait.recycleToTop()
+                onCollideCallback?.invoke()
+            }
+        }
     }
+
+    override fun getRects(): List<Rect> = listOf(getRectangle())
 
 }

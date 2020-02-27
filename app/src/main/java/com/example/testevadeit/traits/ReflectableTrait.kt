@@ -18,13 +18,13 @@ class ReflectableTrait(
 
     override fun move(): Coordinates {
         super.move()
-        if (position.y >= gameFieldSize.height){
+        if (position.y >= gameFieldSize.height) {
             recycleToTop()
         }
-        if (position.x >= gameFieldSize.width){
+        if (position.x >= gameFieldSize.width) {
             movingVector.x = -1f
         }
-        if (position.x <= 0){
+        if (position.x <= 0) {
             movingVector.x = 1f
         }
         return position

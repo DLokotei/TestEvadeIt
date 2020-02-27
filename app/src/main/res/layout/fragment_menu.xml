@@ -36,5 +36,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Last score = 0"/>
+
+        <TextView
+            android:id="@+id/text_top_score"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Top score = 0"/>
     </LinearLayout>
 </FrameLayout>

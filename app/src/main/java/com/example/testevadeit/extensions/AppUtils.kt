@@ -4,8 +4,9 @@ import android.graphics.Rect
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import com.example.testevadeit.MainActivity
+import com.example.testevadeit.traits.Collidable
 
-fun Fragment.getNavigation(): NavController = (activity as MainActivity).navigation
+fun Fragment.getNavigation(): NavController? = (activity as? MainActivity)?.navigation
 
 fun Rect.collidedWith(target: Rect): Boolean {
     if (target.right < this.left || target.left > this.right) {
@@ -15,4 +16,19 @@ fun Rect.collidedWith(target: Rect): Boolean {
         return false
     }
     return true
+}
+
+fun Rect.collidedWith(targets: List<Rect>): Boolean {
+    targets.forEach {
+        if (this.collidedWith(it))
+            return true
+    }
+    return false
+}
+
+fun Collidable.checkCollidingWith(subject: Collidable, onCollideCallback: (() -> Unit)?) {
+    subject.getRects().forEach {
+        if (it.collidedWith(this.getRects()))
+            onCollideCallback?.invoke()
+    }
 }

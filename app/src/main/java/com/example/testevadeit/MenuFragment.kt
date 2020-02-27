@@ -1,6 +1,5 @@
 package com.example.testevadeit
 
-
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -9,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import androidx.navigation.NavController
+import com.example.testevadeit.extensions.PreferencesHelper
 import com.example.testevadeit.extensions.getNavigation
 
 
@@ -16,12 +16,21 @@ class MenuFragment : Fragment() {
 
     private var isFromPause = false
     private var lastScore = 0
+    private var topScore = 0
+
+    private lateinit var preferencesHelper: PreferencesHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
             isFromPause = it.getBoolean(ARG_IS_FROM_PAUSE)
             lastScore = it.getInt(ARG_LAST_SCORE)
+        }
+        preferencesHelper = PreferencesHelper(activity as MainActivity)
+        topScore = preferencesHelper.getTopScore()
+        if (topScore < lastScore){
+            preferencesHelper.saveTopScore(lastScore)
+            topScore = lastScore
         }
     }
 
@@ -34,13 +43,17 @@ class MenuFragment : Fragment() {
         view.findViewById<Button>(R.id.btn_continue).apply {
             if (isFromPause) this.visibility = View.VISIBLE
             setOnClickListener {
-                GameFragment.open(getNavigation(), isNewGame = false)
+                getNavigation()?.let {
+                    GameFragment.open(it, isNewGame = false)
+                }
             }
         }
 
         view.findViewById<Button>(R.id.btn_new_game).apply {
             setOnClickListener {
-                GameFragment.open(getNavigation(), isNewGame = true)
+                getNavigation()?.let {
+                    GameFragment.open(it, isNewGame = true)
+                }
             }
         }
 
@@ -51,7 +64,11 @@ class MenuFragment : Fragment() {
         }
 
         view.findViewById<TextView>(R.id.text_last_score).apply {
-            text = resources.getString(R.string.scores, lastScore.toString())
+            text = resources.getString(R.string.last_scores, lastScore.toString())
+        }
+
+        view.findViewById<TextView>(R.id.text_top_score).apply {
+            text = resources.getString(R.string.top_scores, topScore.toString())
         }
 
         return view
